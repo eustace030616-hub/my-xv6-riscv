@@ -143,6 +143,7 @@ UPROGS=\
 	$U/_wc\
 	$U/_zombie\
 	$U/_logstress\
+	$U/_sleep\
 	$U/_forphan\
 	$U/_dorphan\
 
