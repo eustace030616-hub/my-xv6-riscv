@@ -146,6 +146,7 @@ UPROGS=\
 	$U/_sleep\
 	$U/_pingpong\
 	$U/_primes\
+	$U/_find\
 	$U/_forphan\
 	$U/_dorphan\
 
