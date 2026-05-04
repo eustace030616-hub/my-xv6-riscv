@@ -12,16 +12,16 @@ fmtname(char *path)
 
   // Find first character after last slash.
   for(p=path+strlen(path); p >= path && *p != '/'; p--)
-    ;
-  p++;
+    ;/*p will start at end of path, move backwards every loop*/
+  p++;/*move forward 2 position, so file name is found(a/b/c \0 -> c is found)*/
 
   // Return blank-padded name.
   if(strlen(p) >= DIRSIZ)
     return p;
-  memmove(buf, p, strlen(p));
-  memset(buf+strlen(p), ' ', DIRSIZ-strlen(p));
-  buf[sizeof(buf)-1] = '\0';
-  return buf;
+  memmove(buf, p, strlen(p));/*copy p content to empty buf*/
+  memset(buf+strlen(p), ' ', DIRSIZ-strlen(p));/*buf is 15 char long, fill places not used by p with ' '*/
+  buf[sizeof(buf)-1] = '\0';/*make last slot of buf \0 so it is a proper string*/
+  return buf;/*so basically this fmtname is a file name parser, located file name, make it into a string and return*/
 }
 
 void
@@ -54,15 +54,15 @@ ls(char *path)
       printf("ls: path too long\n");
       break;
     }
-    strcpy(buf, path);
-    p = buf+strlen(buf);
-    *p++ = '/';
+    strcpy(buf, path);/*copy path to buf*/
+    p = buf+strlen(buf);/*move p to end of buf(where there is not empty)*/
+    *p++ = '/';/*put a / there*/
     while(read(fd, &de, sizeof(de)) == sizeof(de)){
       if(de.inum == 0)
         continue;
-      memmove(p, de.name, DIRSIZ);
-      p[DIRSIZ] = 0;
-      if(stat(buf, &st) < 0){
+      memmove(p, de.name, DIRSIZ);/*put de.name after buf(remember p is at the end with newly attached /)*/
+      p[DIRSIZ] = 0;/*end of string, same as p[DIRSIZ] = '\0'*/
+      if(stat(buf, &st) < 0){ /*find the file that buf describes, fill its stats in &st*/
         printf("ls: cannot stat %s\n", buf);
         continue;
       }
