@@ -86,6 +86,11 @@ sys_pause(void)
   return 0;
 }
 
+uint64 sys_sleep(void)
+{
+  return sys_pause();
+}
+
 uint64
 sys_kill(void)
 {

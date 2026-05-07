@@ -15,6 +15,6 @@ main(int argc, char *argv[])
         exit(1);
     }
 
-    pause(n);
+    sleep(n);
     exit(0);
 }

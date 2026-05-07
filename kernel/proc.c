@@ -278,7 +278,10 @@ kfork(void)
 
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
+  
+  // child inherits parent trace_mask.
   np->trace_mask = p->trace_mask;
+  
   // Cause fork to return 0 in the child.
   np->trapframe->a0 = 0;
 
