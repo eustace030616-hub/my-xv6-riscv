@@ -1,4 +1,5 @@
 #define SBRK_ERROR ((char *)-1)
+#include "kernel/types.h"
 
 struct stat;
 
@@ -23,7 +24,10 @@ int dup(int);
 int getpid(void);
 char* sys_sbrk(int,int);
 int pause(int);
+int sleep(int);
 int uptime(void);
+int trace(int mask);
+
 
 // ulib.c
 int stat(const char*, struct stat*);

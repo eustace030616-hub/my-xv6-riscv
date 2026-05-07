@@ -86,6 +86,11 @@ sys_pause(void)
   return 0;
 }
 
+uint64 sys_sleep(void)
+{
+  return sys_pause();
+}
+
 uint64
 sys_kill(void)
 {
@@ -106,4 +111,12 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+int sys_trace(void) 
+{
+  int mask;
+  argint(0, &mask);
+  myproc()->trace_mask = mask;
+  return 0;
 }
