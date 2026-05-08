@@ -1,0 +1,13 @@
+*** Now run 'gdb' in another window.
+
+xv6 kernel is booting
+
+hart 2 starting
+hart 1 starting
+init: starting sh
+$ trace 32 grep hello README
+4: syscall read -> 1023
+4: syscall read -> 965
+4: syscall read -> 437
+4: syscall read -> 0
+$ qemu-system-riscv64: terminating on signal 15 from pid 45038 (<unknown process>)

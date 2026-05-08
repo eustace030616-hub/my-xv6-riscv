@@ -1,7 +1,9 @@
 #define SBRK_ERROR ((char *)-1)
 #include "kernel/types.h"
+#include "kernel/sysinfo.h"
 
 struct stat;
+struct sysinfo;
 
 // system calls
 int fork(void);
@@ -27,6 +29,7 @@ int pause(int);
 int sleep(int);
 int uptime(void);
 int trace(int mask);
+int sysinfo(struct sysinfo*);
 
 
 // ulib.c

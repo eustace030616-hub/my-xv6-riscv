@@ -691,3 +691,14 @@ procdump(void)
     printf("\n");
   }
 }
+
+int
+count_procs(void)
+{
+    int n = 0;
+    for(int i = 0; i < NPROC; i++){
+        if(proc[i].state != UNUSED)
+            n++;
+    }
+    return n;
+}
