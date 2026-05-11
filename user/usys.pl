@@ -44,3 +44,4 @@ entry("pause");
 entry("sleep");
 entry("uptime");
 entry("trace");
+entry("sysinfo");

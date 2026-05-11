@@ -162,6 +162,7 @@ UPROGS=\
 	$U/_xargs\
 	$U/_trace\
 	$U/_tracetest\
+	$U/_sysinfotest\
 	$U/_forphan\
 	$U/_dorphan\
 

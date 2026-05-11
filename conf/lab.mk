@@ -1,2 +1,2 @@
-LAB=util
+LAB=syscall
 
