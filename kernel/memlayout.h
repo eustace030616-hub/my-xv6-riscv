@@ -61,6 +61,3 @@
 // for lab-pgtbl.
 #define USYSCALL (TRAPFRAME - PGSIZE)
 // for lab-pgtbl.
-struct usyscall {
-  int pid;  // Process ID
-};

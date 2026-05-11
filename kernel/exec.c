@@ -137,7 +137,6 @@ kexec(char *path, char **argv)
 
   if (p -> pid == 1)
     vmprint(p -> pagetable, 0);
-  printf("vmprint done, continuing boot...\n");
 
   return argc; // this ends up in a0, the first argument to main(argc, argv)
 
