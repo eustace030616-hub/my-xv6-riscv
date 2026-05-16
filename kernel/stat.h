@@ -9,3 +9,8 @@ struct stat {
   short nlink; // Number of links to file
   uint64 size; // Size of file in bytes
 };
+
+// for lab-pgtbl.
+struct usyscall {
+  int pid;  // Process ID
+};

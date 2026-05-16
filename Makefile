@@ -163,6 +163,7 @@ UPROGS=\
 	$U/_trace\
 	$U/_tracetest\
 	$U/_sysinfotest\
+	$U/_pgtbltest\
 	$U/_forphan\
 	$U/_dorphan\
 
