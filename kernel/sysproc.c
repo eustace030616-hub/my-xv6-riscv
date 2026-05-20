@@ -88,6 +88,7 @@ sys_pause(void)
 
 uint64 sys_sleep(void)
 {
+  backtrace();
   return sys_pause();
 }
 
