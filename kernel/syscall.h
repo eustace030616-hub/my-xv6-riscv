@@ -24,3 +24,5 @@
 #define SYS_sleep  23
 #define SYS_sysinfo  24
 #define SYS_pgaccess   25
+#define SYS_sigalarm   26
+#define SYS_sigreturn   27

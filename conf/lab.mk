@@ -1,2 +1,2 @@
-LAB=pgtbl
+LAB=traps
 

@@ -1,3 +1,4 @@
+#ifdef LAB_PGTBL
 #include "kernel/param.h"
 #include "kernel/fcntl.h"
 #include "kernel/types.h"
@@ -68,3 +69,7 @@ pgaccess_test()
   free(buf);
   printf("pgaccess_test: OK\n");
 }
+#else
+#include "user/user.h"
+int main(void) { exit(0); }
+#endif

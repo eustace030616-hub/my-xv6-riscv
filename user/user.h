@@ -33,8 +33,12 @@ int sysinfo(struct sysinfo*);
 
 // lab=pgtbl
 int pgaccess(void *base, int len, void *mask);
-    // usyscall region
+#ifdef LAB_PGTBL
 int ugetpid(void);
+#endif
+// lab=traps
+int sigalarm(int ticks, void (*handler)());
+int sigreturn(void);
 
 
 // ulib.c

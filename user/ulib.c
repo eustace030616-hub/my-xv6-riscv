@@ -160,9 +160,11 @@ sbrklazy(int n) {
   return sys_sbrk(n, SBRK_LAZY);
 }
 
+#ifdef LAB_PGTBL
 int
 ugetpid(void)
 {
   struct usyscall *u = (struct usyscall *)USYSCALL;
   return u->pid;
 }
+#endif
