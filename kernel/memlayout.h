@@ -58,6 +58,8 @@
 //   TRAMPOLINE (the same page as in the kernel)
 #define TRAPFRAME (TRAMPOLINE - PGSIZE)
 
+#ifdef LAB_PGTBL
 // for lab-pgtbl.
 #define USYSCALL (TRAPFRAME - PGSIZE)
+#endif
 // for lab-pgtbl.

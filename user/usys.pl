@@ -46,4 +46,6 @@ entry("uptime");
 entry("trace");
 entry("sysinfo");
 entry("pgaccess");
+entry("sigalarm");
+entry("sigreturn");
 

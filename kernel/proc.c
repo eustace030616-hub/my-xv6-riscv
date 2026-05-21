@@ -125,6 +125,10 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
+  p->interval = 0;
+  p->handler = 0;
+  p->ticks = 0;
+  p->enable_handler = 0;
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -133,6 +137,7 @@ found:
     return 0;
   }
 
+#ifdef LAB_PGTBL
   // Allocate USYSCALL page
   if((p->usyscall = (struct usyscall *)kalloc()) == 0){
     freeproc(p);
@@ -140,6 +145,7 @@ found:
     return 0;
   }
   p->usyscall->pid = p->pid;
+#endif
 
   // An empty user page table.
   p->pagetable = proc_pagetable(p);
@@ -167,9 +173,11 @@ freeproc(struct proc *p)
   if(p->trapframe)
     kfree((void*)p->trapframe);
   p->trapframe = 0;
+#ifdef LAB_PGTBL
   if (p->usyscall)
     kfree((void*)p->usyscall);
   p->usyscall = 0;
+#endif
   if(p->pagetable)
     proc_freepagetable(p->pagetable, p->sz);
   p->pagetable = 0;
@@ -214,13 +222,15 @@ proc_pagetable(struct proc *p)
     return 0;
   }
 
-  // map the usyscall page (read-only for userspace)                                                    
+#ifdef LAB_PGTBL
+  // map the usyscall page (read-only for userspace)
   if(mappages(pagetable, USYSCALL, PGSIZE, (uint64)(p->usyscall), PTE_R | PTE_U) < 0){
     uvmunmap(pagetable, TRAMPOLINE, 1, 0);
     uvmunmap(pagetable, TRAPFRAME, 1, 0);
     uvmfree(pagetable, 0);
-    return 0;                      
+    return 0;
   }
+#endif
 
   return pagetable;
 }
@@ -232,7 +242,9 @@ proc_freepagetable(pagetable_t pagetable, uint64 sz)
 {
   uvmunmap(pagetable, TRAMPOLINE, 1, 0);
   uvmunmap(pagetable, TRAPFRAME, 1, 0);
+#ifdef LAB_PGTBL
   uvmunmap(pagetable, USYSCALL, 1, 0);
+#endif
   uvmfree(pagetable, sz);
 }
 
@@ -529,7 +541,6 @@ yield(void)
 void
 forkret(void)
 {
-  extern char userret[];
   static int first = 1;
   struct proc *p = myproc();
 
@@ -555,10 +566,8 @@ forkret(void)
   }
 
   // return to user space, mimicing usertrap()'s return.
-  prepare_return();
-  uint64 satp = MAKE_SATP(p->pagetable);
-  uint64 trampoline_userret = TRAMPOLINE + (userret - trampoline);
-  ((void (*)(uint64))trampoline_userret)(satp);
+  usertrapret();
+
 }
 
 // Sleep on channel chan, releasing condition lock lk.

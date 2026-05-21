@@ -88,6 +88,9 @@ CFLAGS += -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf
 CFLAGS += -I.
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 
+# Uncomment to enable pgtbl lab features (USYSCALL page)
+# CFLAGS += -DLAB_PGTBL
+
 # Disable PIE when possible (for Ubuntu 16.10 toolchain)
 ifneq ($(shell $(CC) -dumpspecs 2>/dev/null | grep -e '[^f]no-pie'),)
 CFLAGS += -fno-pie -no-pie
@@ -164,6 +167,9 @@ UPROGS=\
 	$U/_tracetest\
 	$U/_sysinfotest\
 	$U/_pgtbltest\
+	$U/_call\
+	$U/_bttest\
+	$U/_alarmtest\
 	$U/_forphan\
 	$U/_dorphan\
 

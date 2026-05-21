@@ -282,6 +282,15 @@ r_time()
   return x;
 }
 
+// store current executing function in register s0
+static inline uint64
+r_fp()
+{
+ uint64 x;
+ asm volatile("mv %0, s0" : "=r" (x) );
+ return x;
+}
+
 // enable device interrupts
 static inline void
 intr_on()

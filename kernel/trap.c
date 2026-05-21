@@ -9,7 +9,7 @@
 struct spinlock tickslock;
 uint ticks;
 
-extern char trampoline[], uservec[];
+extern char trampoline[], uservec[], userret[];
 
 // in kernelvec.S, calls kerneltrap().
 void kernelvec();
@@ -34,7 +34,7 @@ trapinithart(void)
 // called from, and returns to, trampoline.S
 // return value is user satp for trampoline.S to switch to.
 //
-uint64
+void
 usertrap(void)
 {
   int which_dev = 0;
@@ -54,7 +54,7 @@ usertrap(void)
   if(r_scause() == 8){
     // system call
 
-    if(killed(p))
+    if(p->killed)
       kexit(-1);
 
     // sepc points to the ecall instruction,
@@ -69,49 +69,51 @@ usertrap(void)
   } else if((which_dev = devintr()) != 0){
     // ok
   } else if((r_scause() == 15 || r_scause() == 13) &&
-            vmfault(p->pagetable, r_stval(), (r_scause() == 13)? 1 : 0) != 0) {
-    // page fault on lazily-allocated page
+    vmfault(p->pagetable, r_stval(), (r_scause() == 13)? 1 : 0) != 0) {
+      // page fault on lazily-allocated page
   } else {
-    printf("usertrap(): unexpected scause 0x%lx pid=%d\n", r_scause(), p->pid);
-    printf("            sepc=0x%lx stval=0x%lx\n", r_sepc(), r_stval());
-    setkilled(p);
+    printf("usertrap(): unexpected scause %p pid=%d\n", (void *)r_scause(), p->pid);
+    printf("            sepc=%p stval=%p\n", (void *)r_sepc(), (void *)r_stval());
+    p->killed = 1;
   }
 
-  if(killed(p))
+  if(p->killed)
     kexit(-1);
 
   // give up the CPU if this is a timer interrupt.
-  if(which_dev == 2)
+  if(which_dev == 2) {
+      if((++p->ticks ==  p->interval) && p->enable_handler){
+      p->enable_handler = 0;
+      p->ticks = 0;
+      p->alarm_trapframe = *(p->trapframe);
+      // No need to call mannually, just let pc point at which the handler point at
+      //(*(void(*)())(p->handler))();
+      p->trapframe->epc = p->handler;
+    }
     yield();
+  }
 
-  prepare_return();
-
-  // the user page table to switch to, for trampoline.S
-  uint64 satp = MAKE_SATP(p->pagetable);
-
-  // return to trampoline.S; satp value in a0.
-  return satp;
+  usertrapret();
 }
 
 //
-// set up trapframe and control registers for a return to user space
+// return to user space
 //
 void
-prepare_return(void)
+usertrapret(void)
 {
   struct proc *p = myproc();
 
   // we're about to switch the destination of traps from
-  // kerneltrap() to usertrap(). because a trap from kernel
-  // code to usertrap would be a disaster, turn off interrupts.
+  // kerneltrap() to usertrap(), so turn off interrupts until
+  // we're back in user space, where usertrap() is correct.
   intr_off();
 
-  // send syscalls, interrupts, and exceptions to uservec in trampoline.S
-  uint64 trampoline_uservec = TRAMPOLINE + (uservec - trampoline);
-  w_stvec(trampoline_uservec);
+  // send syscalls, interrupts, and exceptions to trampoline.S
+  w_stvec(TRAMPOLINE + (uservec - trampoline));
 
   // set up trapframe values that uservec will need when
-  // the process next traps into the kernel.
+  // the process next re-enters the kernel.
   p->trapframe->kernel_satp = r_satp();         // kernel page table
   p->trapframe->kernel_sp = p->kstack + PGSIZE; // process's kernel stack
   p->trapframe->kernel_trap = (uint64)usertrap;
@@ -128,6 +130,15 @@ prepare_return(void)
 
   // set S Exception Program Counter to the saved user pc.
   w_sepc(p->trapframe->epc);
+
+  // tell trampoline.S the user page table to switch to.
+  uint64 satp = MAKE_SATP(p->pagetable);
+
+  // jump to trampoline.S at the top of memory, which 
+  // switches to the user page table, restores user registers,
+  // and switches to user mode with sret.
+  uint64 fn = TRAMPOLINE + (userret - trampoline);
+  ((void (*)(uint64))fn)(satp);
 }
 
 // interrupts and exceptions from kernel code go here via kernelvec,
