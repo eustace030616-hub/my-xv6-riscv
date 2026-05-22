@@ -68,9 +68,45 @@ usertrap(void)
     syscall();
   } else if((which_dev = devintr()) != 0){
     // ok
-  } else if((r_scause() == 15 || r_scause() == 13) &&
-    vmfault(p->pagetable, r_stval(), (r_scause() == 13)? 1 : 0) != 0) {
-      // page fault on lazily-allocated page
+  } else if(r_scause() == 13 || r_scause() == 15) {
+      // inline COW handling
+      uint64 va = PGROUNDDOWN(r_stval());
+      pte_t *pte;
+
+      if(va >= MAXVA) {
+          p->killed = 1;
+      } else if (va >= p->sz) {
+        p->killed = 1;
+      } else if ((pte = walk(p->pagetable, va, 0)) == 0 || (*pte & PTE_V) == 0) {
+        // LAZY ALLOC: page never allocated
+          char *mem = kalloc();
+          if(mem == 0) {
+            p->killed = 1;
+          } else {
+            memset(mem, 0, PGSIZE);
+            if (mappages(p->pagetable, va, PGSIZE, (uint64)mem, PTE_W|PTE_X|PTE_R|PTE_U) != 0) {
+              kfree(mem);
+              p->killed = 1;
+            }
+          }
+      } else if((*pte & PTE_COW) != 0) {
+          char *mem = kalloc();
+          uint64 pa = PTE2PA(*pte);
+          if(mem == 0) {
+              p->killed = 1;
+          } else {
+              *pte = (*pte | PTE_W) & (~PTE_COW);
+              int flags = PTE_FLAGS(*pte);
+              memmove(mem, (char*)pa, PGSIZE);
+              uvmunmap(p->pagetable, va, 1, 1);
+              if(mappages(p->pagetable, va, PGSIZE, (uint64)mem, flags) != 0) {
+                  kfree(mem);
+                  p->killed = 1;
+              }
+          }
+      } else {
+          p->killed = 1;
+      }
   } else {
     printf("usertrap(): unexpected scause %p pid=%d\n", (void *)r_scause(), p->pid);
     printf("            sepc=%p stval=%p\n", (void *)r_sepc(), (void *)r_stval());

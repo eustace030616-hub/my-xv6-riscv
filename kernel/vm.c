@@ -325,29 +325,27 @@ uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
 {
   pte_t *pte;
   uint64 pa, i;
-  uint flags;
-  char *mem;
 
   for(i = 0; i < sz; i += PGSIZE){
     if((pte = walk(old, i, 0)) == 0)
       continue;   // page table entry hasn't been allocated
     if((*pte & PTE_V) == 0)
       continue;   // physical page hasn't been allocated
+    
     pa = PTE2PA(*pte);
-    flags = PTE_FLAGS(*pte);
-    if((mem = kalloc()) == 0)
-      goto err;
-    memmove(mem, (char*)pa, PGSIZE);
-    if(mappages(new, i, PGSIZE, (uint64)mem, flags) != 0){
-      kfree(mem);
-      goto err;
+    //lab=cow
+    if (*pte & PTE_W) {
+      *pte = ((*pte) & (~PTE_W)) | PTE_COW;
+    }
+
+    k_incre_ref((void*)pa);
+    
+    if(mappages(new, i, PGSIZE, pa, PTE_FLAGS(*pte)) != 0){
+      kfree((void*)pa);
+      return -1;
     }
   }
   return 0;
-
- err:
-  uvmunmap(new, 0, i / PGSIZE, 1);
-  return -1;
 }
 
 // mark a PTE invalid for user access.
@@ -377,18 +375,37 @@ copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
     if(va0 >= MAXVA)
       return -1;
   
-    pa0 = walkaddr(pagetable, va0);
-    if(pa0 == 0) {
-      if((pa0 = vmfault(pagetable, va0, 0)) == 0) {
+    pte = walk(pagetable, va0, 0);
+    if(pte == 0 || (*pte & PTE_V) == 0 || (*pte & PTE_U) == 0) {
+      return -1;
+    }
+    
+    //lab=cow cow handling
+    if ((*pte & PTE_COW) != 0) {
+      char *mem = kalloc();
+      if(mem == 0){
         return -1;
       }
+      uint64 pa = PTE2PA(*pte);
+      *pte = (*pte | PTE_W) & (~PTE_COW);
+      int flags = PTE_FLAGS(*pte);
+      memmove(mem, (char*)pa, PGSIZE);
+      uvmunmap(pagetable, va0, 1, 1);
+      if (mappages(pagetable, va0, PGSIZE, (uint64)mem, flags) != 0) {
+        kfree(mem);
+        return -1;
+      }
+      pa0 = (uint64)mem;
+    } else {
+      if ((*pte & PTE_W) == 0)
+        return -1;
+
+      // use walkaddr for non_cow pages
+      pa0 = walkaddr(pagetable, va0);
+      if (pa0 == 0)
+        return -1;
     }
 
-    pte = walk(pagetable, va0, 0);
-    // forbid copyout over read-only user text pages.
-    if((*pte & PTE_W) == 0)
-      return -1;
-      
     n = PGSIZE - (dstva - va0);
     if(n > len)
       n = len;
