@@ -60,7 +60,7 @@ void*           kalloc(void);
 void            kfree(void *);
 void            kinit(void);
 int             count_freemem(void);
-
+void            k_incre_ref(void* pa);
 // log.c
 void            initlog(int, struct superblock*);
 void            log_write(struct buf*);

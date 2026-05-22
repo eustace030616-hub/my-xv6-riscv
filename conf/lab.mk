@@ -1,2 +1,2 @@
-LAB=traps
+LAB=cow
 
