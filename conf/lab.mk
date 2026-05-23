@@ -1,2 +1,2 @@
-LAB=cow
+LAB=uthread
 

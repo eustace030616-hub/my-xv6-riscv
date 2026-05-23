@@ -171,9 +171,23 @@ UPROGS=\
 	$U/_bttest\
 	$U/_alarmtest\
 	$U/_cowtest\
+	$U/_uthread\
 	$U/_forphan\
 	$U/_dorphan\
 
+
+$U/uthread_switch.o : $U/uthread_switch.S
+	$(CC) $(CFLAGS) -c -o $U/uthread_switch.o $U/uthread_switch.S
+
+$U/_uthread: $U/uthread.o $U/uthread_switch.o $(ULIB)
+	$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $U/_uthread $U/uthread.o $U/uthread_switch.o $(ULIB)
+	$(OBJDUMP) -S $U/_uthread > $U/uthread.asm
+
+ph: notxv6/ph.c
+	gcc -o ph -g -O2 $(XCFLAGS) notxv6/ph.c -pthread
+
+barrier: notxv6/barrier.c
+	gcc -o barrier -g -O2 $(XCFLAGS) notxv6/barrier.c -pthread
 UEXTRA=
 ifeq ($(LAB),util)
 	UEXTRA += user/xargstest.sh
