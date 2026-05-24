@@ -1,2 +1,2 @@
-LAB=uthread
+LAB=thread
 
