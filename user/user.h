@@ -39,6 +39,8 @@ int ugetpid(void);
 // lab=traps
 int sigalarm(int ticks, void (*handler)());
 int sigreturn(void);
+// lab=net
+int connect(uint32, uint16, uint16);
 
 
 // ulib.c
