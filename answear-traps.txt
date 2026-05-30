@@ -1,5 +1,0 @@
-1. a1, a2, a0; in a2
-2. in here: 2e:	45b1                	li	a1,12
-3. 778
-4. HE110 World, unsigned int i = 0x726c6400 and nothing more need to be modified.
-5. y is not specified, so output is unpredictable.
